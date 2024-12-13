@@ -1,5 +1,5 @@
 #backup of UCLH code with db & user names removed
-#run the local version & copy updates to this backup
+#probably don't run this version, run the local version & copy updates to this backup
 #andy south
 #repo is forked from Oxford & this local script added
 
@@ -18,6 +18,7 @@ cdmSchema <- "data_catalogue_003" #6 months
 
 
 # create a DBI connection to your database
+# user-prompt here, in script to run they are hardcoded
 user <- rstudioapi::askForPassword("user")
 host <- rstudioapi::askForPassword("host")
 port <- 15432
@@ -26,7 +27,7 @@ pwd <- rstudioapi::askForPassword("Password for omop_db")
 con <- DBI::dbConnect(RPostgres::Postgres(),user = user, host = host, port = port, dbname = dbname, password=pwd)
 
 #get this if not connected to VPN
-#Error: could not translate host name "uclvlddpragae06" to address: Unknown host
+#Error: could not translate host name ... to address: Unknown host
 
 
 # schema in the database where you have writing permissions
@@ -51,6 +52,7 @@ cdm <- CDMConnector::cdmFromCon(
 #ehden_001 : works
 #data_catalogue_003 :
 #Error in `validateCdmReference()`: overlap between observation_periods, 2642 overlaps detected
+
 #if don't have permsissions get : Error in `cdm_from_con()`: ! There were no cdm tables found in the cdm_schema!
 #contact Baptiste to rectify
 
