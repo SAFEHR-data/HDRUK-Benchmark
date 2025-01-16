@@ -7,4 +7,5 @@ Benchmark/Results/*.txt
 Benchmark/Results/*.zip
 .DS_Store
 shiny/data/*.csv
+.Renviron
 
