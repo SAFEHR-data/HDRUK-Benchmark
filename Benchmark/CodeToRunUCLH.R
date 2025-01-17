@@ -1,7 +1,7 @@
-#backup of UCLH code with db & user names removed
-#probably don't run this version, run the local version & copy updates to this backup
-#andy south
-#repo is forked from Oxford & this local script added
+# UCLH code
+# TO RUN choose a dbName,cdmSchema pair, comment out others, source script
+# andy south
+# repo is forked from Oxford & this local script added
 
 # to restore renv environment
 renv::restore()
@@ -10,12 +10,25 @@ renv::restore()
 # beware dbName identifies outputs, dbname is UCLH db
 # here different outputs can be created for each UCLH schema which is a different omop extract
 
-#dbName <- "UCLH-EHDEN"
-#cdmSchema <- "ehden_001"
+# TO RUN choose a dbName,cdmSchema pair, comment out others, source script
 
-dbName <- "UCLH-6months"
-cdmSchema <- "data_catalogue_003" #6 months
+dbName <- "UCLH-EHDEN"
+cdmSchema <- "ehden_001"
+#2025-01-17 works
 
+# dbName <- "UCLH-6months"
+# cdmSchema <- "data_catalogue_003" #6 months
+#2025-01-17 gives
+#Error in `validateGeneratedCohortSet()`:
+# ! 1 observation outside observation period.
+# Warning message: - No people found for denominator population
+
+
+# dbName <- "UCLH-2years"
+# cdmSchema <- "data_catalogue_004" #2 years
+#2025-01-17 gives
+#Error in `validateGeneratedCohortSet()`:
+#! Cohort can't have NA values, there are NA values in the following columns: cohort_end_date
 
 # create a DBI connection to UCLH database
 # using credentials in .Renviron or you can replace with hardcoded values here
@@ -29,6 +42,7 @@ writeSchema <- "_other_andsouth"
 if("" %in% c(user, host, port, dbname, writeSchema))
   stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
 pwd <- rstudioapi::askForPassword("Password for omop_db")
+
 
 con <- DBI::dbConnect(RPostgres::Postgres(),user = user, host = host, port = port, dbname = dbname, password=pwd)
 
@@ -59,6 +73,7 @@ cdm <- CDMConnector::cdmFromCon(
 #contact Baptiste to rectify
 
 # run study code
-#source("Benchmark/R/RunBenchmark.R")
+# BEWARE needs to be run from .Rproj file in benchmark folder for paths to work
 source("R/RunBenchmark.R")
+
 
