@@ -6,29 +6,25 @@
 # to restore renv environment
 renv::restore()
 
+## START OF SETTINGS copied between benchmarking, characterisation & antibiotics study
+
 # acronym to identify the database
 # beware dbName identifies outputs, dbname is UCLH db
 # here different outputs can be created for each UCLH schema which is a different omop extract
 
 # TO RUN choose a dbName,cdmSchema pair, comment out others, source script
 
-dbName <- "UCLH-EHDEN"
-cdmSchema <- "ehden_001"
-#2025-01-17 works
+#dbName <- "UCLH-EHDEN"
+#cdmSchema <- "ehden_001"
+#2025-01-20 completed in ~2.5 hours
 
 # dbName <- "UCLH-6months"
 # cdmSchema <- "data_catalogue_003" #6 months
-#2025-01-17 gives
-#Error in `validateGeneratedCohortSet()`:
-# ! 1 observation outside observation period.
-# Warning message: - No people found for denominator population
+# put brief progress here
 
-
-# dbName <- "UCLH-2years"
-# cdmSchema <- "data_catalogue_004" #2 years
-#2025-01-17 gives
-#Error in `validateGeneratedCohortSet()`:
-#! Cohort can't have NA values, there are NA values in the following columns: cohort_end_date
+dbName <- "UCLH-2years"
+cdmSchema <- "data_catalogue_004" #2 years
+# put brief progress here
 
 # create a DBI connection to UCLH database
 # using credentials in .Renviron or you can replace with hardcoded values here
@@ -36,12 +32,15 @@ user <- Sys.getenv("user")
 host <- Sys.getenv("host")
 port <- Sys.getenv("port")
 dbname <- Sys.getenv("dbname")
+pwd <- Sys.getenv("pwd")
 # schema in database where you have writing permissions
 writeSchema <- "_other_andsouth"
 
-if("" %in% c(user, host, port, dbname, writeSchema))
+if("" %in% c(user, host, port, dbname, pwd, writeSchema))
   stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
-pwd <- rstudioapi::askForPassword("Password for omop_db")
+
+#now pwd got from .Renviron
+#pwd <- rstudioapi::askForPassword("Password for omop_db")
 
 
 con <- DBI::dbConnect(RPostgres::Postgres(),user = user, host = host, port = port, dbname = dbname, password=pwd)
@@ -65,12 +64,43 @@ cdm <- CDMConnector::cdmFromCon(
   .softValidation = TRUE
 )
 
-#ehden_001 : works
-#data_catalogue_003 :
-#Error in `validateCdmReference()`: overlap between observation_periods, 2642 overlaps detected
+# 2025-02-04
+# a patch to cope with records where drug_exposure_start_date > drug_exposure_end_date
+# this causes error in benchmarking with 2 year extract (only 577 rows)
+cdm$drug_exposure <- cdm$drug_exposure |> dplyr::filter(drug_exposure_start_date <= drug_exposure_end_date)
 
-#if don't have permsissions get : Error in `cdm_from_con()`: ! There were no cdm tables found in the cdm_schema!
-#contact Baptiste to rectify
+
+## END OF SETTINGS copied between benchmarking, characterisation & antibiotics study
+
+# 2025-01-28 investigation of records where drug_exposure_start_date > drug_exposure_end_date
+investigate <- FALSE
+if (investigate)
+{
+  # this causes error with 2 year extract
+  # #Error in `validateGeneratedCohortSet()`:
+  # 577 rows
+  de_bad_dates <- cdm$drug_exposure |>
+    dplyr::filter(!drug_exposure_start_date <= drug_exposure_end_date) |>
+    collect() |>
+    mutate(xdays_end_minus_start = drug_exposure_end_date-drug_exposure_start_date)
+
+  freq_bad_dates <- de_bad_dates |> count(xdays_end_minus_start, sort=TRUE)
+
+  # ~3/5 just 1 day
+  # xdays_end_minus_start     n
+  # 1  -1 days                310
+  # 2  -2 days                 19
+  # 3  -3 days                 16
+  # 4  -4 days                 15
+  # 5  -7 days                 14
+  # 6  -6 days                 11
+  # 7  -5 days                  9
+  # 8 -29 days                  8
+  # 9  -9 days                  8
+  # 10 -30 days                  6
+  # ℹ 84 more rows
+}
+
 
 # run study code
 # BEWARE needs to be run from .Rproj file in benchmark folder for paths to work
