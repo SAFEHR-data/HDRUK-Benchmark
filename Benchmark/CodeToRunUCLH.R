@@ -26,6 +26,17 @@ dbName <- "UCLH-2years"
 cdmSchema <- "data_catalogue_004" #2 years
 # put brief progress here
 
+# dbName <- "UCLH-from-2019"
+# cdmSchema <- "data_catalogue_005" #from 2019
+# currently failing to find any tables in 005
+# > DBI::dbListObjects(con, DBI::Id(schema = cdmSchema))
+# [1] table     is_prefix
+# <0 rows> (or 0-length row.names)
+
+dbName <- "UCLH-from-2019"
+cdmSchema <- "data_catalogue_006" #from 2019
+# 2025-03-11 new extract
+
 # create a DBI connection to UCLH database
 # using credentials in .Renviron or you can replace with hardcoded values here
 user <- Sys.getenv("user")
@@ -47,6 +58,8 @@ con <- DBI::dbConnect(RPostgres::Postgres(),user = user, host = host, port = por
 
 #you get this if not connected to VPN
 #Error: could not translate host name ... to address: Unknown host
+#list tables
+DBI::dbListObjects(con, DBI::Id(schema = cdmSchema))
 
 # created tables will start with this prefix
 prefix <- "uclh_hdruk_benchmark"
