@@ -13,7 +13,12 @@ new_rows <- function(res, task_name, time, iteration) {
     ))
   return(res)
 }
-
+check_int64 <- function(druglist){
+if (any(purrr::map_lgl(druglist, inherits, "integer64"))) {
+  druglist <- purrr::map(druglist, as.integer)
+}
+  return(druglist)
+}
 generalBenchmark <- function(cdm, iterations, logger) {
 
   res <- tibble::tibble()
@@ -125,6 +130,8 @@ generalBenchmark <- function(cdm, iterations, logger) {
     task_name <- "Get ingredient codes with CodelistGenerator"
     res <- new_rows(res, task_name = task_name, time = t, iteration = i)
 
+    druglist <- check_int64(druglist)
+
     # 9) Instantiate acetaminophen and metformin cohorts
     tictoc::tic()
     cdm <- DrugUtilisation::generateDrugUtilisationCohortSet(
@@ -154,7 +161,7 @@ generalBenchmark <- function(cdm, iterations, logger) {
     task_name <- "Get conditions codes with CodelistGenerator"
     res <- new_rows(res, task_name = task_name, time = t, iteration = i)
 
-    codes <- omopgenerics::newCodelist(list("sinusitis" = codes_sin, "bronchitis" = codes_bro, "pharyngitis" = codes_ph))
+    codes <- omopgenerics::newCodelist(list("sinusitis" = codes_sin, "bronchitis" = codes_bro, "pharyngitis" = codes_ph)|>check_int64())
 
     # 12) Create condtions cohorts with CohortConstructor
     tictoc::tic()
@@ -193,7 +200,8 @@ generalBenchmark <- function(cdm, iterations, logger) {
       cdm = cdm,
       conceptSet = list("diabetes" = CodelistGenerator::getDescendants(cdm, conceptId = 201820)$concept_id,
                       "hypertension_disorder" = CodelistGenerator::getDescendants(cdm, conceptId = 316866)$concept_id,
-                      "asthma" = CodelistGenerator::getDescendants(cdm, conceptId = 317009)$concept_id),
+                      "asthma" = CodelistGenerator::getDescendants(cdm, conceptId = 317009)$concept_id) |>
+        check_int64(),
       name = "my_cohort"
       )
     t <- tictoc::toc()
